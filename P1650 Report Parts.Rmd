@@ -1,0 +1,742 @@
+---
+title: "P1650 Report Parts"
+output: html_document
+date: '2022-06-01'
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+source("./weight.R")
+source("./fig_setup.R")
+
+library(knitr)
+library(janitor)
+
+# Eventually switch to a param
+sch.w <- sch1.w
+
+```
+
+# Key demographics
+
+## Personal annual income
+
+```{r}
+tmp <- as.data.frame(svytable(~q131r, sch.w))
+tmp$perc <- tmp$Freq/sum(tmp$Freq)
+names(tmp)[1] <- "var"
+
+strada1(tmp)
+
+```
+
+## Employment
+
+** QUESTION:** This currently combines CATA responses without
+deduplication. Do we report all responses or add a Multiple option? For
+example, Full time (for employer) + Part time (for self) = ? Currently
+these are counted as 1 FT and 1 PT so the sum of the responses for this
+is greater than the number of respondents.
+
+```{r}
+tmp <- tibble(
+  q82 = svytable(~q82r, sch.w),
+  q83 = svytable(~q83r, sch.w),
+  q84 = svytable(~q84r, sch.w),
+  q85 = svytable(~q85r, sch.w),
+  q86 = svytable(~q86r, sch.w),
+  q87 = svytable(~q87r, sch.w)
+)
+
+tmp <- as.data.frame(t(tmp))
+
+tmp <- rownames_to_column(tmp, "qnum")
+
+tmp$emp <- c("Full time", 
+             "Full time", 
+             "Part time", 
+             "Part time", 
+             "Not currently working, but looking for work", 
+             "Not currently working, and not looking for work"
+             )
+
+tmp$emp <- factor(tmp$emp, 
+                  levels = c("Full time", 
+                         "Part time",
+                         "Not currently working, but looking for work",
+                         "Not currently working, and not looking for work"
+                         )
+                  )
+
+tmp <- tmp %>% group_by(emp) %>% summarize(V2 = sum(V2))
+
+tmp$perc <- tmp$V2/sum(tmp$V2)
+names(tmp)[1] <- "var"
+
+strada1(tmp)
+
+```
+
+# Parent's Education
+
+```{r}
+tmp <- as.data.frame(svytable(~q128, sch.w))
+
+tmp$edu <- c("High school or less / Tech / Trade", 
+             "High school or less / Tech / Trade", 
+             "High school or less / Tech / Trade", 
+             "Some college",
+             "Associate degree",
+             "Bachelor's degree",
+             "Some graduate school / Graduate degree",
+             "Some graduate school / Graduate degree",
+             "Not sure",
+             "Some graduate school / Graduate degree"
+             )
+
+tmp$edu <- factor(tmp$edu,
+                  levels = c("High school or less / Tech / Trade", 
+                             "Some college",
+                             "Associate degree",
+                             "Bachelor's degree",
+                             "Some graduate school / Graduate degree",
+                             "Not sure"
+                             )
+                  )
+
+tmp <- tmp %>% group_by(edu) %>% summarize(Freq = sum(Freq))
+
+tmp$perc <- tmp$Freq/sum(tmp$Freq)
+
+names(tmp)[1] <- "var"
+
+strada1(tmp)
+
+```
+
+## Graduate education of alumni
+
+**Question:** How to combine these into No grad, some grad, and
+grad/prof?
+
+```{r}
+tmp <- tibble(
+  q21 = svytable(~q21r, sch.w),
+  q22 = svytable(~q22r, sch.w),
+  q23 = svytable(~q23r, sch.w),
+  q24 = svytable(~q24r, sch.w),
+  q25 = svytable(~q25r, sch.w),
+  q26 = svytable(~q26r, sch.w),
+  q27 = svytable(~q27r, sch.w),  
+  q28 = svytable(~q28r, sch.w),  
+  q29 = svytable(~q29r, sch.w),
+)
+
+tmp <- as.data.frame(t(tmp))
+
+tmp <- rownames_to_column(tmp, "qnum")
+
+tmp$edu <- c("U grad cert", 
+             "Assoc", 
+             "Bach", 
+             "Post bach", 
+             "Master", 
+             "Post Master",
+             "Doc res",
+             "Doc prof",
+             "None"
+             )
+
+tmp$edu <- factor(tmp$edu,
+                  levels = c("U grad cert", 
+             "Assoc", 
+             "Bach", 
+             "Post bach", 
+             "Master", 
+             "Post Master",
+             "Doc res",
+             "Doc prof",
+             "None"
+             )
+)
+
+
+tmp <- tmp %>% group_by(edu) %>% summarize(V2 = sum(V2))
+
+tmp$perc <- tmp$V2/sum(tmp$V2)
+
+names(tmp)[1] <- "var"
+
+strada1(tmp)
+
+```
+
+## Demographic Profile: Top Majors
+
+**Question:** Combine these into Engineering, Business, Computer like example? Collapse some other way?
+
+```{r}
+tmp <- tibble(
+  q135 = svytable(~q135, sch.w),
+  q136 = svytable(~q136, sch.w),
+  q137 = svytable(~q137, sch.w),
+  q138 = svytable(~q138, sch.w),
+  q139 = svytable(~q139, sch.w),
+  q140 = svytable(~q140, sch.w),
+  q141 = svytable(~q141, sch.w),
+  q142 = svytable(~q142, sch.w),
+  q143 = svytable(~q143, sch.w),
+  q144 = svytable(~q144, sch.w),
+  q145 = svytable(~q145, sch.w),
+  q146 = svytable(~q146, sch.w),
+  q147 = svytable(~q147, sch.w),
+  q148 = svytable(~q148, sch.w),
+  q149 = svytable(~q149, sch.w),
+  q150 = svytable(~q150, sch.w),
+  q151 = svytable(~q151, sch.w),
+  q152 = svytable(~q152, sch.w),
+  q153 = svytable(~q153, sch.w),
+  q154 = svytable(~q154, sch.w),
+  q155 = svytable(~q155, sch.w),
+  q156 = svytable(~q156, sch.w),
+  q157 = svytable(~q157, sch.w),
+  q158 = svytable(~q158, sch.w),
+  q159 = svytable(~q159, sch.w)
+)
+
+tmp <- as.data.frame(t(tmp))
+
+tmp <- rownames_to_column(tmp, "qnum")
+
+tmp$var <- c(
+  "Biological and biomedical sciences",
+  "Business, management, marketing, and related support service",
+  "Communication, journalism, and related program",
+  "Computer and information sciences and support services",
+  "Education",
+  "Engineering",
+  "Engineering technologies/technicians",
+  "English language and literature/letter",
+  "Health professions and related clinical sciences",
+  "History",
+  "Psychology",
+  "Security and protective services",
+  "Social sciences",
+  "Visual and performing arts",
+  "Liberal arts and sciences, general studies and humanities",
+  "Communications technologies/technicians and support services",
+  "Legal professions and studies",
+  "Agriculture, agriculture operations, and related sciences",
+  "Physical sciences",
+  "Mathematics and statistics",
+  "Science technologies/technicians",
+  "Architecture and related services",
+  "Natural resources and conservation",
+  "Public administration and social service professions",
+  "Other"
+  )
+
+tmp$var <- factor(
+  tmp$var,
+  levels = c(
+    "Biological and biomedical sciences",
+    "Business, management, marketing, and related support service",
+    "Communication, journalism, and related program",
+    "Computer and information sciences and support services",
+    "Education",
+    "Engineering",
+    "Engineering technologies/technicians",
+    "English language and literature/letter",
+    "Health professions and related clinical sciences",
+    "History",
+    "Psychology",
+    "Security and protective services",
+    "Social sciences",
+    "Visual and performing arts",
+    "Liberal arts and sciences, general studies and humanities",
+    "Communications technologies/technicians and support services",
+    "Legal professions and studies",
+    "Agriculture, agriculture operations, and related sciences",
+    "Physical sciences",
+    "Mathematics and statistics",
+    "Science technologies/technicians",
+    "Architecture and related services",
+    "Natural resources and conservation",
+    "Public administration and social service professions",
+    "Other"
+  )
+)
+
+
+#tmp <- tmp %>% group_by(var) %>% summarize(V1 = sum(V1))
+
+tmp$perc <- tmp$V1/sum(tmp$V1)
+
+tmp <- tmp %>% select(var, perc)
+
+strada1(tmp)
+```
+
+
+## Current occupation
+
+```{r}
+
+tmp <- as.data.frame(svytable(~q92, sch.w))
+
+tmp$var <- c(
+  "Education, training, and library occupations",
+  "Management occupations",
+  "Business and financial operations occupation",
+  "Computer, engineering, and science occupations",
+  "Community service, social service, legal, arts, design, entertainment, sports and media occupation",
+  "Healthcare",
+  "Service occupation",
+  "Sales and related occupation",
+  "Office and administrative support occupation",
+  "Natural resources, construction, and maintenance occupations",
+  "Production, transportation, and material moving occupations",
+  "Other"
+)
+
+tmp$var <- factor(
+  tmp$var,
+  levels = c(
+  "Education, training, and library occupations",
+  "Management occupations",
+  "Business and financial operations occupation",
+  "Computer, engineering, and science occupations",
+  "Community service, social service, legal, arts, design, entertainment, sports and media occupation",
+  "Healthcare",
+  "Service occupation",
+  "Sales and related occupation",
+  "Office and administrative support occupation",
+  "Natural resources, construction, and maintenance occupations",
+  "Production, transportation, and material moving occupations",
+  "Other"
+  ),
+  labels = c(
+  "Education, training,\n and library occupations",
+  "Management occupations",
+  "Business and financial\n operations occupation",
+  "Computer, engineering,\n and science occupations",
+  "Community service, social service,\n legal, arts, design, entertainment,\n sports and media occupation",
+  "Healthcare",
+  "Service occupation",
+  "Sales and related\n occupation",
+  "Office and administrative\n support occupation",
+  "Natural resources, construction,\n and maintenance occupations",
+  "Production, transportation,\n and material moving occupations",
+  "Other"
+  )
+
+)
+
+tmp$perc <- tmp$Freq/sum(tmp$Freq)
+
+tmp$perc1 <- scales::percent(tmp$Freq/sum(tmp$Freq), 1.0)
+
+tmp2 <- tmp[c(1, 5)]
+names(tmp2) <- c("Current occupation", "Percent")
+
+kable(tmp2)
+
+
+tmp <- tmp %>% select(var, perc)
+
+strada1(tmp)
+
+```
+# Summary findings
+
+## Achieved goals
+
+My school education helped me achieve my goals
+
+```{r}
+
+tmp <- as.data.frame(svytable(~q37, sch.w))
+tmp$perc <- tmp$Freq/sum(tmp$Freq)
+names(tmp)[1] <- "var"
+tmp$var2 <- "Helped me achieve goals"
+
+strada2(tmp, "Helped me achieve goals")
+
+```
+
+## Cost Value
+
+My school education was worth the cost
+
+```{r}
+
+tmp <- as.data.frame(svytable(~q30, sch.w))
+tmp$perc <- tmp$Freq/sum(tmp$Freq)
+names(tmp)[1] <- "var"
+tmp$var2 <- "Education worth the cost"
+
+tmp$var <- factor(tmp$var,
+                  levels = c(
+                    "Strongly agree",
+                    "Somewhat agree",
+                    "Neither agree nor disagree",
+                    "Somewhat disagree",
+                    "Strongly disagree"
+                    )
+                  )
+
+strada2(tmp, "Education worth the cost")
+
+```
+
+## Income
+
+Annual income before taxes
+
+```{r}
+tmp <- as.data.frame(svytable(~q131r, sch.w))
+tmp$perc <- tmp$Freq/sum(tmp$Freq)
+names(tmp)[1] <- "var"
+
+
+
+strada1(tmp)
+
+```
+
+# Summary findings by sub-group
+
+-   Total\
+-   Students of color\
+-   First gen\
+-   Female\
+-   Non-trad (What is non-trad?)\
+-   Graduated in past 10 years
+
+## Achieved goals - Cost Value - Income
+
+My school education helped me achieve my goals
+My school education was worth the cost
+Annual income before taxes
+
+```{r}
+
+tot <- as.data.frame(svytable(~q37, sch.w))
+soc <- as.data.frame(svytable(~q37+soc, sch.w))
+
+
+```
+
+# Net Benefit scores
+
+## Value
+
+-   Is worth the cost\
+-   Helped me support self and family\
+-   Helped make more money\
+-   Impact on financial circumstances
+
+## Life Impact
+
+-   Impact on community engagement\
+-   Impact on quality of life\
+-   Helped me learn new things\
+-   Helped me become the best person I can be\
+-   Helped me become a good role model
+
+## Career satisfaction
+
+-   Impact on success at work\
+-   Helped me to qualify for good jobs\
+-   Helped me to advance my career\
+-   Makes/made me an attractive candidate for potential employers\
+-   Makes/made me an attractive candidate for graduate or professional
+    school\
+-   Helped me gain skills to be successful in work\
+-   Satisfaction with current job/career
+
+## Skill development
+
+-   Critical Thinking/Problem Solving\
+-   Verbal Communication/ Speaking\
+-   Writing\
+-   Leadership\
+-   Data Analysis/Statistics\
+-   Teamwork\
+-   Digital Literacy\
+-   Math\
+-   Project Management\
+-   Ability to learn new things\
+-   Creativity
+
+## Affinity
+
+-   When someone praises ..., it feels like a personal compliment\
+-   If a story in the media criticized ..., I would feel embarrassed\
+-   It's important to me to remain engaged with ...\
+-   Likelihood to recommend\
+-   Interested in talking to current students about work and career\
+-   Interested in serving as a mentor for current students\
+-   Interested in providing a job shadowing experience for current
+    students
+
+# Net Benefit scores by sub-group
+
+-   Total\
+-   Students of color\
+-   First gen\
+-   Female\
+-   Non-trad (What is non-trad?)\
+-   Graduated in past 10 years
+
+## Value
+
+-   Is worth the cost\
+-   Helped me support self and family\
+-   Helped make more money\
+-   Impact on financial circumstances
+
+## Life Impact
+
+-   Impact on community engagement\
+-   Impact on quality of life\
+-   Helped me learn new things\
+-   Helped me become the best person I can be\
+-   Helped me become a good role model
+
+## Career satisfaction
+
+-   Impact on success at work\
+-   Helped me to qualify for good jobs\
+-   Helped me to advance my career\
+-   Makes/made me an attractive candidate for potential employers\
+-   Makes/made me an attractive candidate for graduate or professional
+    school\
+-   Helped me gain skills to be successful in work\
+-   Satisfaction with current job/career
+
+## Skill development
+
+-   Critical Thinking/Problem Solving\
+-   Verbal Communication/ Speaking\
+-   Writing\
+-   Leadership\
+-   Data Analysis/Statistics\
+-   Teamwork\
+-   Digital Literacy\
+-   Math\
+-   Project Management\
+-   Ability to learn new things\
+-   Creativity
+
+## Affinity
+
+-   When someone praises ..., it feels like a personal compliment\
+-   If a story in the media criticized ..., I would feel embarrassed\
+-   It's important to me to remain engaged with ...\
+-   Likelihood to recommend\
+-   Interested in talking to current students about work and career\
+-   Interested in serving as a mentor for current students\
+-   Interested in providing a job shadowing experience for current
+    students
+
+# Peer benchmarking: Net benefit profile
+
+-   You, national, avg peer benchmark, pb high, pb low
+
+## Value
+
+-   Is worth the cost\
+-   Helped me support self and family\
+-   Helped make more money\
+-   Impact on financial circumstances
+
+## Life Impact
+
+-   Impact on community engagement\
+-   Impact on quality of life\
+-   Helped me learn new things\
+-   Helped me become the best person I can be\
+-   Helped me become a good role model
+
+## Career satisfaction
+
+-   Impact on success at work\
+-   Helped me to qualify for good jobs\
+-   Helped me to advance my career\
+-   Makes/made me an attractive candidate for potential employers\
+-   Makes/made me an attractive candidate for graduate or professional
+    school\
+-   Helped me gain skills to be successful in work\
+-   Satisfaction with current job/career
+
+## Skill development
+
+-   Critical Thinking/Problem Solving\
+-   Verbal Communication/ Speaking\
+-   Writing\
+-   Leadership\
+-   Data Analysis/Statistics\
+-   Teamwork\
+-   Digital Literacy\
+-   Math\
+-   Project Management\
+-   Ability to learn new things\
+-   Creativity
+
+## Affinity
+
+-   When someone praises ..., it feels like a personal compliment\
+-   If a story in the media criticized ..., I would feel embarrassed\
+-   It's important to me to remain engaged with ...\
+-   Likelihood to recommend\
+-   Interested in talking to current students about work and career\
+-   Interested in serving as a mentor for current students\
+-   Interested in providing a job shadowing experience for current
+    students
+
+# Detailed findings
+
+## Net benefit profile - Value
+
+-   Benefit score
+
+-   Bar chart SA-SD
+
+-   My education was worth the cost\
+
+-   Financial circumstances\
+
+-   My school education helped me to support myself and family\
+
+-   My school education helped me make more money
+
+## Net benefit profile - Life impact
+
+-   Benefit score
+
+-   Bar chart SA-SD
+
+-   Community engagement\
+
+-   Quality of life\
+
+-   Learn new things\
+
+-   Become the best person I can be\
+
+-   Be a good role model
+
+## Net benefit profile - Career
+
+-   Benefit score
+
+-   Bar chart SA-SD
+
+-   Attractive candidate for grad school\
+
+-   Attractive candidate for potential employers\
+
+-   Success at work
+
+## Net benefit profile - Career
+
+-   Benefit score
+
+-   Bar chart SA-SD
+
+-   Qualify for good jobs\
+
+-   Gain skills to be successful in work\
+
+-   Advance my career\
+
+-   Job/Career satisfaction
+
+## Net benefit profile - Skill dev
+
+-   Benefit score
+-   Bar chart SA-SD, flipped
+
+Crit thinking ... Math
+
+## Net benefit profile - Affinity
+
+-   Benefit score
+
+-   Bar chart SA-SD
+
+-   When someone praises school, it feels like a compliment\
+
+-   It is important to me to remain supportive of school\
+
+-   If media criticized school, I would feel embarrassed
+
+## Net benefit profile - Affinity
+
+-   Benefit score
+
+-   Bar chart SA-SD
+
+-   Talk to current students about work/career good jobs
+
+-   Serve as a mentor for current students
+
+-   Provide a job shadowing exp for current students
+
+-   Likely to recommend school to someone enrolling in undergrad program
+
+## Net benefit profile - Affinity
+
+-   Benefit score
+-   Bar chart SA-SD
+
+## Value contributed to overall experience
+
+Classes ... Alumni network
+
+## Impact on securing first job: Reputation and Resources
+
+-   Benefit score\
+-   Bar chart SA-SD
+
+Bach degree ... Alumni network
+
+## Value of skills in your current job
+
+-   Benefit score
+-   Bar chart SA-SD
+
+Critical thinking ... Math
+
+## Developed skills: Value perceptions
+
+-   How much did your education help you develop the following skills?.
+-   Looking at the same list of skills you reviewed earlier in the
+    survey, please indicate how valuable each one is in your current
+    job.
+
+Critical thinking ... Creativity
+
+## Educational goals: Reasons for pursuing education and outcomes
+
+Be able to qualify for good jobs ... Be a good role model
+
+## Perspectives on student loans
+
+-   Total borrowed in student loans
+-   It was worth taking out loans to get BA.
+
+# Appendix
+
+## Additional demographics
+
+-   Gender
+-   Current age
+-   Graduation year
+-   Hisp/Latinx origin
+-   Race ethnicity
