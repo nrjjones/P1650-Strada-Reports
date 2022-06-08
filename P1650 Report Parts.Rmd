@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 source("./weight.R")
 source("./fig_setup.R")
+source("./ad_subg_tab.R")
 
 library(knitr)
 library(janitor)
@@ -410,79 +411,224 @@ strada1(tmp)
 
 # Summary findings by sub-group
 
--   Total\
--   Students of color\
--   First gen\
--   Female\
--   Non-trad (What is non-trad?)\
+-   Total
+-   Students of color
+-   First gen
+-   Female
+-   Non-trad (What is non-trad?)
 -   Graduated in past 10 years
 
 ## Achieved goals - Cost Value - Income
 
-My school education helped me achieve my goals
-My school education was worth the cost
-Annual income before taxes
+### My school education helped me achieve my goals
 
 ```{r}
 
-tot <- as.data.frame(svytable(~q37, sch.w))
-soc <- as.data.frame(svytable(~q37+soc, sch.w))
+# Function for subgroup bar charts
 
+subg <- ad_subg_tab("q37", sch.w)
+
+strada3(subg)
+
+subg1 <- subg
+```
+
+### My school education was worth the cost
+
+```{r}
+
+subg <- ad_subg_tab("q30", sch.w)
+
+strada3(subg)
+
+subg2 <- subg
+
+```
+
+### Annual income before taxes >$50k
+
+```{r}
+
+# Custom code to handle income instead of A/D scale. 
+
+tot <- as.data.frame(svytable(~q131r, sch.w))
+tot$grp <- "Total"
+tot$var <- "Total"
+names(tot)[1] <- "val"
+tot <- tot %>% group_by(grp, var) %>% 
+  mutate(perc = Freq/sum(Freq)) %>% 
+  select(grp, var, val, Freq, perc)
+
+soc <- as.data.frame(svytable(~q131r+soc, sch.w))
+soc$grp <- "soc"
+names(soc)[2] <- "var"
+names(soc)[1] <- "val"
+soc <- soc %>% group_by(grp, var) %>% 
+  mutate(perc = Freq/sum(Freq)) %>% 
+  select(grp, var, val, Freq, perc)
+
+fgen <- as.data.frame(svytable(~q131r+fgen, sch.w))
+fgen$grp <- "fgen"
+names(fgen)[2] <- "var"
+names(fgen)[1] <- "val"
+fgen <- fgen %>% group_by(grp, var) %>% 
+  mutate(perc = Freq/sum(Freq)) %>% 
+  select(grp, var, val, Freq, perc)
+
+fem <- as.data.frame(svytable(~q131r+q274, sch.w))
+fem$grp <- "fem"
+names(fem)[2] <- "var"
+names(fem)[1] <- "val"
+fem <- fem %>% group_by(grp, var) %>% 
+  mutate(perc = Freq/sum(Freq)) %>% 
+  select(grp, var, val, Freq, perc)
+
+ntrad <- as.data.frame(svytable(~q131r+ntrad, sch.w))
+ntrad$grp <- "ntrad"
+names(ntrad)[2] <- "var"
+names(ntrad)[1] <- "val"
+ntrad <- ntrad %>% group_by(grp, var) %>% 
+  mutate(perc = Freq/sum(Freq)) %>% 
+  select(grp, var, val, Freq, perc)
+
+recg <- as.data.frame(svytable(~q131r+recg, sch.w))
+recg$grp <- "recg"
+names(recg)[2] <- "var"
+names(recg)[1] <- "val"
+recg <- recg %>% group_by(grp, var) %>% 
+  mutate(perc = Freq/sum(Freq)) %>% 
+  select(grp, var, val, Freq, perc)
+
+subg <- bind_rows(tot, soc, fgen, fem, ntrad, recg)
+
+subg <- subg %>% 
+  filter(var %in% c(
+    "Total", "Yes", "Not White", "Woman"
+    )
+  ) %>% 
+  filter(val %in% c("$150k+", "$100k-$150k", "$50k-$100k")) %>% 
+  group_by(grp) %>% 
+  summarize(perc = sum(perc))
+
+subg$grp <- factor(subg$grp,
+                   levels = c("Total", "soc", "fgen", "fem", "ntrad", "recg"),
+                   labels = c("Total", "Students of color", "First generation", "Females", "Non-Traditional", "Recent graduate")
+)
+
+strada3(subg)
+
+subg3 <- subg
+
+```
+
+### Combined table?  
+
+```{r}
+
+subg1$var <- "Helped achieve goals"
+subg2$var <- "Worth the cost"
+subg3$var <- "Income (>$50k)"
+
+subg <- bind_rows(subg1, subg2, subg3)
+
+subg$var <- factor(subg$var,
+                   levels = c("Helped achieve goals", 
+                              "Worth the cost",
+                              "Income (>$50k)"
+                              )
+                   )
+
+
+ggplot(subg, aes(grp, perc, label=scales::percent(perc, 1.0), fill=grp)) +
+    geom_col() +
+    geom_text(
+      hjust = -0.3,
+      size = 2
+    ) +
+    coord_flip() +
+    scale_y_continuous(labels = scales::percent) +
+    scale_x_discrete(limits = rev) +
+    theme_minimal() +
+    labs(x="", y="") +
+    theme(
+      panel.border = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.text.x = element_blank(),
+      legend.position = "none"
+    ) +
+    scale_fill_manual(values = colr2) +
+    facet_wrap(vars(var)) 
 
 ```
 
 # Net Benefit scores
 
-## Value
+Value
 
--   Is worth the cost\
--   Helped me support self and family\
--   Helped make more money\
+-   Is worth the cost
+-   Helped me support self and family
+-   Helped make more money
 -   Impact on financial circumstances
 
-## Life Impact
+Life Impact
 
--   Impact on community engagement\
--   Impact on quality of life\
--   Helped me learn new things\
--   Helped me become the best person I can be\
+-   Impact on community engagement
+-   Impact on quality of life
+-   Helped me learn new things
+-   Helped me become the best person I can be
 -   Helped me become a good role model
 
-## Career satisfaction
+Career satisfaction
 
--   Impact on success at work\
--   Helped me to qualify for good jobs\
--   Helped me to advance my career\
--   Makes/made me an attractive candidate for potential employers\
+-   Impact on success at work
+-   Helped me to qualify for good jobs
+-   Helped me to advance my career
+-   Makes/made me an attractive candidate for potential employers
 -   Makes/made me an attractive candidate for graduate or professional
-    school\
--   Helped me gain skills to be successful in work\
+    school
+-   Helped me gain skills to be successful in work
 -   Satisfaction with current job/career
 
-## Skill development
+Skill development
 
--   Critical Thinking/Problem Solving\
--   Verbal Communication/ Speaking\
--   Writing\
--   Leadership\
--   Data Analysis/Statistics\
--   Teamwork\
--   Digital Literacy\
--   Math\
--   Project Management\
--   Ability to learn new things\
+-   Critical Thinking/Problem Solving
+-   Verbal Communication/ Speaking
+-   Writing
+-   Leadership
+-   Data Analysis/Statistics
+-   Teamwork
+-   Digital Literacy
+-   Math
+-   Project Management
+-   Ability to learn new things
 -   Creativity
 
-## Affinity
+Affinity
 
--   When someone praises ..., it feels like a personal compliment\
--   If a story in the media criticized ..., I would feel embarrassed\
--   It's important to me to remain engaged with ...\
--   Likelihood to recommend\
--   Interested in talking to current students about work and career\
--   Interested in serving as a mentor for current students\
+-   When someone praises ..., it feels like a personal compliment
+-   If a story in the media criticized ..., I would feel embarrassed
+-   It's important to me to remain engaged with ...
+-   Likelihood to recommend
+-   Interested in talking to current students about work and career
+-   Interested in serving as a mentor for current students
 -   Interested in providing a job shadowing experience for current
     students
+
+## Net benefit profile
+
+```{r}
+
+value = nb_value(sch.w)
+life = nb_life(sch.w)
+career = nb_career(sch.w)
+skill = nb_skill(sch.w)
+affinity = nb_affinity(sch.w)
+
+nb_profile <- bind_rows()
+
+
+```
 
 # Net Benefit scores by sub-group
 

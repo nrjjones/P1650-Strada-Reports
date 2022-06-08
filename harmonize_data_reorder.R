@@ -125,7 +125,7 @@ levels(strada$q95) <- c("Arts, design, entertainment, sports, media", "Community
 levels(strada$q96) <- c("Healthcare practitioners and technical workers", "Healthcare support", "Other")
 levels(strada$q97) <- c("Personal care and service worker", "Security and protective services", "Building and grounds cleaning", "Food preparation or service", "Other")
 levels(strada$q99) <- c("Manufacturing or production worker", "Transportation and material moving worker", "Other")
-levels(strada$q128)[7] <- "Soome postgraduate, but no postgraduate degree"
+levels(strada$q128)[7] <- "Some postgraduate, but no postgraduate degree"
 levels(strada$q263) <- c("Yes, but no link", "Yes, and ok to link", "No")
 
 # Add some others for gender and age
@@ -223,9 +223,27 @@ strada <- strada %>%
     q29r = if_else(!is.na(q29), 1, 0),
     soc = case_when(
       q191=="White" ~ "White",
-      is.na(q191) ~ "Not White")
+      is.na(q191) ~ "Not White"),
+    fgen = case_when(
+      q128 %in% c(
+        "Bachelor’s degree",
+        "Some postgraduate, but no postgraduate degree",
+        "Master's degree",
+        "Advanced degree such as a Ph.D, a Law degree or a Medical degree"
+        ) ~ "No",
+      TRUE ~ "Yes"
+    ),
+      ntrad = case_when(
+        q272_grad_age > 26 ~ "Yes",
+        q272_grad_age <= 26 ~ "No"
+      ),
+    recg = case_when(
+      q225_rec <= 10 ~ "Yes",
+      q225_rec > 10 ~ "No"
+    )
 
-  )
+    )
+
 
 #tmp <- strada %>% select(q272_orig, q272, q272_rec, q272_clean, q272_grad_age, q225_rec, q272_cat) %>%  filter(q272_orig !="")
 
