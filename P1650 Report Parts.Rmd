@@ -1,6 +1,8 @@
 ---
 title: "P1650 Report Parts"
-output: html_document
+output: 
+  html_document: 
+    toc: yes
 date: '2022-06-01'
 editor_options: 
   markdown: 
@@ -9,10 +11,14 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 
-source("./weight.R")
-source("./fig_setup.R")
-source("./ad_subg_tab.R")
+source("./weight.R")       # Weighting and raking
+source("./fig_setup.R")    # Figure specifications
+source("./ad_subg_tab.R")  # Sub-group function for making figures
+source("./nb_summary.R")   # Net benefit function for making summary scale figures
+source("./nb_details.R")   # Net benefit function for making detail component figures
 
 library(knitr)
 library(janitor)
@@ -37,7 +43,7 @@ strada1(tmp)
 
 ## Employment
 
-** QUESTION:** This currently combines CATA responses without
+**QUESTION:** This currently combines CATA responses without
 deduplication. Do we report all responses or add a Multiple option? For
 example, Full time (for employer) + Part time (for self) = ? Currently
 these are counted as 1 FT and 1 PT so the sum of the responses for this
@@ -352,6 +358,8 @@ tmp <- tmp %>% select(var, perc)
 strada1(tmp)
 
 ```
+
+
 # Summary findings
 
 ## Achieved goals
@@ -542,8 +550,9 @@ subg$var <- factor(subg$var,
 ggplot(subg, aes(grp, perc, label=scales::percent(perc, 1.0), fill=grp)) +
     geom_col() +
     geom_text(
-      hjust = -0.3,
-      size = 2
+      color = "white",
+      hjust = 1.3,
+      size = 3
     ) +
     coord_flip() +
     scale_y_continuous(labels = scales::percent) +
@@ -625,221 +634,335 @@ career = nb_career(sch.w)
 skill = nb_skill(sch.w)
 affinity = nb_affinity(sch.w)
 
-nb_profile <- bind_rows()
+nb_profile <- bind_rows(value, life, career, skill, affinity)
 
+strada4(nb_profile)
 
 ```
 
 # Net Benefit scores by sub-group
 
--   Total\
--   Students of color\
--   First gen\
--   Female\
--   Non-trad (What is non-trad?)\
+-   Total
+-   Students of color
+-   First gen
+-   Female
+-   Non-trad (What is non-trad?)
 -   Graduated in past 10 years
 
-## Value
+```{r}
 
--   Is worth the cost\
--   Helped me support self and family\
--   Helped make more money\
--   Impact on financial circumstances
 
-## Life Impact
+t_nb_profile <- nb_profile %>% mutate(grp = "Total")
 
--   Impact on community engagement\
--   Impact on quality of life\
--   Helped me learn new things\
--   Helped me become the best person I can be\
--   Helped me become a good role model
+# SOC
+value = nb_value(subset(sch.w, soc == "Not White"))
+life = nb_life(subset(sch.w, soc == "Not White"))
+career = nb_career(subset(sch.w, soc == "Not White"))
+skill = nb_skill(subset(sch.w, soc == "Not White"))
+affinity = nb_affinity(subset(sch.w, soc == "Not White"))
 
-## Career satisfaction
+soc_nb_profile <- bind_rows(value, life, career, skill, affinity) %>% 
+  mutate(grp = "Students of color")
 
--   Impact on success at work\
--   Helped me to qualify for good jobs\
--   Helped me to advance my career\
--   Makes/made me an attractive candidate for potential employers\
--   Makes/made me an attractive candidate for graduate or professional
-    school\
--   Helped me gain skills to be successful in work\
--   Satisfaction with current job/career
+# First gen
+value = nb_value(subset(sch.w, fgen == "Yes"))
+life = nb_life(subset(sch.w, fgen == "Yes"))
+career = nb_career(subset(sch.w, fgen == "Yes"))
+skill = nb_skill(subset(sch.w, fgen == "Yes"))
+affinity = nb_affinity(subset(sch.w, fgen == "Yes"))
 
-## Skill development
+fgen_nb_profile <- bind_rows(value, life, career, skill, affinity) %>% 
+  mutate(grp = "First generation")
 
--   Critical Thinking/Problem Solving\
--   Verbal Communication/ Speaking\
--   Writing\
--   Leadership\
--   Data Analysis/Statistics\
--   Teamwork\
--   Digital Literacy\
--   Math\
--   Project Management\
--   Ability to learn new things\
--   Creativity
+# Female
+value = nb_value(subset(sch.w, q274 == "Woman"))
+life = nb_life(subset(sch.w, q274 == "Woman"))
+career = nb_career(subset(sch.w, q274 == "Woman"))
+skill = nb_skill(subset(sch.w, q274 == "Woman"))
+affinity = nb_affinity(subset(sch.w, q274 == "Woman"))
 
-## Affinity
+fem_nb_profile <- bind_rows(value, life, career, skill, affinity) %>% 
+  mutate(grp = "Female")
 
--   When someone praises ..., it feels like a personal compliment\
--   If a story in the media criticized ..., I would feel embarrassed\
--   It's important to me to remain engaged with ...\
--   Likelihood to recommend\
--   Interested in talking to current students about work and career\
--   Interested in serving as a mentor for current students\
--   Interested in providing a job shadowing experience for current
-    students
+# Non-traditional
+value = nb_value(subset(sch.w, ntrad == "Yes"))
+life = nb_life(subset(sch.w, ntrad == "Yes"))
+career = nb_career(subset(sch.w, ntrad == "Yes"))
+skill = nb_skill(subset(sch.w, ntrad == "Yes"))
+affinity = nb_affinity(subset(sch.w, ntrad == "Yes"))
+
+ntrad_nb_profile <- bind_rows(value, life, career, skill, affinity) %>% 
+  mutate(grp = "Non-Traditional")
+
+# Recent
+value = nb_value(subset(sch.w, recg == "Yes"))
+life = nb_life(subset(sch.w, recg == "Yes"))
+career = nb_career(subset(sch.w, recg == "Yes"))
+skill = nb_skill(subset(sch.w, recg == "Yes"))
+affinity = nb_affinity(subset(sch.w, recg == "Yes"))
+
+recg_nb_profile <- bind_rows(value, life, career, skill, affinity) %>% 
+  mutate(grp = "Recent graduate")
+
+subg_nb_profile <- bind_rows(t_nb_profile, 
+                             soc_nb_profile, 
+                             fgen_nb_profile, 
+                             fem_nb_profile,
+                             ntrad_nb_profile,
+                             recg_nb_profile)
+
+ggplot(subg_nb_profile, aes(grp, nb, label=round(nb*100, 0), fill=grp)) +
+    geom_col() +
+    geom_text(
+      color = "white",
+      hjust = 1.3,
+      size = 3
+    ) +
+    coord_flip() +
+    theme_minimal() +
+    labs(x="", y="") +
+    theme(
+      panel.border = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.text.x = element_blank(),
+      legend.position = "none"
+    ) +
+    scale_fill_manual(values = colr2) +
+    facet_wrap(vars(var)) 
+
+```
 
 # Peer benchmarking: Net benefit profile
 
 -   You, national, avg peer benchmark, pb high, pb low
 
-## Value
+**Question:** Are we doing this?
 
--   Is worth the cost\
--   Helped me support self and family\
--   Helped make more money\
--   Impact on financial circumstances
-
-## Life Impact
-
--   Impact on community engagement\
--   Impact on quality of life\
--   Helped me learn new things\
--   Helped me become the best person I can be\
--   Helped me become a good role model
-
-## Career satisfaction
-
--   Impact on success at work\
--   Helped me to qualify for good jobs\
--   Helped me to advance my career\
--   Makes/made me an attractive candidate for potential employers\
--   Makes/made me an attractive candidate for graduate or professional
-    school\
--   Helped me gain skills to be successful in work\
--   Satisfaction with current job/career
-
-## Skill development
-
--   Critical Thinking/Problem Solving\
--   Verbal Communication/ Speaking\
--   Writing\
--   Leadership\
--   Data Analysis/Statistics\
--   Teamwork\
--   Digital Literacy\
--   Math\
--   Project Management\
--   Ability to learn new things\
--   Creativity
-
-## Affinity
-
--   When someone praises ..., it feels like a personal compliment\
--   If a story in the media criticized ..., I would feel embarrassed\
--   It's important to me to remain engaged with ...\
--   Likelihood to recommend\
--   Interested in talking to current students about work and career\
--   Interested in serving as a mentor for current students\
--   Interested in providing a job shadowing experience for current
-    students
 
 # Detailed findings
 
+**Note:** Switched to horizontal layout as suggested
+
 ## Net benefit profile - Value
 
--   Benefit score
+```{r}
 
--   Bar chart SA-SD
+value <- dnb_value(sch.w) 
 
--   My education was worth the cost\
+value$dummy <- 1
+value$pos <- 1.1
 
--   Financial circumstances\
+d1 <- dict %>% 
+  select(var = uvar, label) %>% unique()
 
--   My school education helped me to support myself and family\
+value <- left_join(value, d1)
 
--   My school education helped me make more money
+v1 <- value %>% 
+#  select(var:val5) %>% 
+  pivot_longer(
+    val1:val5,
+    names_to = "var2",
+    values_to = "perc"
+  ) 
+
+v1$var22 <- case_when(
+  v1$var2 == "val1" ~ "Strongly negative",
+  v1$var2 == "val2" ~ "Somewhat negative",
+  v1$var2 == "val3" ~ "Neither positive nor negative",
+  v1$var2 == "val4" ~ "Somewhat positive",
+  v1$var2 == "val5" ~ "Strongly positive",
+)
+
+v1$var22 <- factor(v1$var22, 
+                    levels = c(
+                       "Strongly positive",
+                       "Somewhat positive",
+                       "Neither positive nor negative",
+                       "Somewhat negative",
+                       "Strongly negative"
+                    )
+                  )
+
+strada5(v1, value)
+
+```
 
 ## Net benefit profile - Life impact
 
--   Benefit score
+```{r}
 
--   Bar chart SA-SD
+life <- dnb_life(sch.w) 
 
--   Community engagement\
+life$dummy <- 1
+life$pos <- 1.1
 
--   Quality of life\
+d1 <- dict %>% 
+  select(var = uvar, label) %>% unique()
 
--   Learn new things\
+life <- left_join(life, d1)
 
--   Become the best person I can be\
+v1 <- life %>% 
+#  select(var:val5) %>% 
+  pivot_longer(
+    val1:val5,
+    names_to = "var2",
+    values_to = "perc"
+  ) 
 
--   Be a good role model
+v1$var22 <- case_when(
+  v1$var2 == "val1" ~ "Strongly negative",
+  v1$var2 == "val2" ~ "Somewhat negative",
+  v1$var2 == "val3" ~ "Neither positive nor negative",
+  v1$var2 == "val4" ~ "Somewhat positive",
+  v1$var2 == "val5" ~ "Strongly positive",
+)
+
+v1$var22 <- factor(v1$var22, 
+                    levels = c(
+                       "Strongly positive",
+                       "Somewhat positive",
+                       "Neither positive nor negative",
+                       "Somewhat negative",
+                       "Strongly negative"
+                    )
+                  )
+
+strada5(v1, life)
+
+```
 
 ## Net benefit profile - Career
 
--   Benefit score
+```{r}
 
--   Bar chart SA-SD
+career <- dnb_career(sch.w) 
 
--   Attractive candidate for grad school\
+career$dummy <- 1
+career$pos <- 1.1
 
--   Attractive candidate for potential employers\
+d1 <- dict %>% 
+  select(var = uvar, label) %>% unique()
 
--   Success at work
+career <- left_join(career, d1)
 
-## Net benefit profile - Career
+v1 <- career %>% 
+#  select(var:val5) %>% 
+  pivot_longer(
+    val1:val5,
+    names_to = "var2",
+    values_to = "perc"
+  ) 
 
--   Benefit score
+v1$var22 <- case_when(
+  v1$var2 == "val1" ~ "Strongly negative",
+  v1$var2 == "val2" ~ "Somewhat negative",
+  v1$var2 == "val3" ~ "Neither positive nor negative",
+  v1$var2 == "val4" ~ "Somewhat positive",
+  v1$var2 == "val5" ~ "Strongly positive",
+)
 
--   Bar chart SA-SD
+v1$var22 <- factor(v1$var22, 
+                    levels = c(
+                       "Strongly positive",
+                       "Somewhat positive",
+                       "Neither positive nor negative",
+                       "Somewhat negative",
+                       "Strongly negative"
+                    )
+                  )
 
--   Qualify for good jobs\
+strada5(v1, career)
 
--   Gain skills to be successful in work\
-
--   Advance my career\
-
--   Job/Career satisfaction
+```
 
 ## Net benefit profile - Skill dev
 
--   Benefit score
--   Bar chart SA-SD, flipped
+```{r}
 
-Crit thinking ... Math
+skill <- dnb_skill(sch.w) 
+
+skill$dummy <- 1
+skill$pos <- 1.1
+
+d1 <- dict %>% 
+  select(var = uvar, label) %>% unique()
+
+skill <- left_join(skill, d1)
+
+v1 <- skill %>% 
+#  select(var:val5) %>% 
+  pivot_longer(
+    val1:val5,
+    names_to = "var2",
+    values_to = "perc"
+  ) 
+
+v1$var22 <- case_when(
+  v1$var2 == "val1" ~ "Strongly negative",
+  v1$var2 == "val2" ~ "Somewhat negative",
+  v1$var2 == "val3" ~ "Neither positive nor negative",
+  v1$var2 == "val4" ~ "Somewhat positive",
+  v1$var2 == "val5" ~ "Strongly positive",
+)
+
+v1$var22 <- factor(v1$var22, 
+                    levels = c(
+                       "Strongly positive",
+                       "Somewhat positive",
+                       "Neither positive nor negative",
+                       "Somewhat negative",
+                       "Strongly negative"
+                    )
+                  )
+
+strada5(v1, skill)
+
+```
 
 ## Net benefit profile - Affinity
 
--   Benefit score
+```{r}
 
--   Bar chart SA-SD
+affinity <- dnb_affinity(sch.w) 
 
--   When someone praises school, it feels like a compliment\
+affinity$dummy <- 1
+affinity$pos <- 1.1
 
--   It is important to me to remain supportive of school\
+d1 <- dict %>% 
+  select(var = uvar, label) %>% unique()
 
--   If media criticized school, I would feel embarrassed
+affinity <- left_join(affinity, d1)
 
-## Net benefit profile - Affinity
+v1 <- affinity %>% 
+#  select(var:val5) %>% 
+  pivot_longer(
+    val1:val5,
+    names_to = "var2",
+    values_to = "perc"
+  ) 
 
--   Benefit score
+v1$var22 <- case_when(
+  v1$var2 == "val1" ~ "Strongly negative",
+  v1$var2 == "val2" ~ "Somewhat negative",
+  v1$var2 == "val3" ~ "Neither positive nor negative",
+  v1$var2 == "val4" ~ "Somewhat positive",
+  v1$var2 == "val5" ~ "Strongly positive",
+)
 
--   Bar chart SA-SD
+v1$var22 <- factor(v1$var22, 
+                    levels = c(
+                       "Strongly positive",
+                       "Somewhat positive",
+                       "Neither positive nor negative",
+                       "Somewhat negative",
+                       "Strongly negative"
+                    )
+                  )
 
--   Talk to current students about work/career good jobs
+strada5(v1, affinity)
 
--   Serve as a mentor for current students
-
--   Provide a job shadowing exp for current students
-
--   Likely to recommend school to someone enrolling in undergrad program
-
-## Net benefit profile - Affinity
-
--   Benefit score
--   Bar chart SA-SD
+```
 
 ## Value contributed to overall experience
 

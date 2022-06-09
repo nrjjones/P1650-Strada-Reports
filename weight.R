@@ -3,6 +3,7 @@ library(survey)
 library(tidyverse)
 
 df <- read_spss("./out/P1650 Harmonized 2022 Data Grad Responses.sav") %>% as_factor()
+dict <- read_csv("./out/P1650 Harmonized Vars Clean w UT.csv") %>% arrange(order2)
 
 fr <- read_csv("./raw/SOS 2022 School Email Send Schedule - IPEDS completion data (pulled 4-26-2022).csv")
 
